@@ -231,14 +231,15 @@ def unseen_largescale(f, cutoff):
     LP2_output = linprog(np.squeeze(objf2), A2, b2, Aeq, beq, options=opts)
     fval2 = LP2_output.fun
     sol2 = LP2_output.x
-    exitflag2=LP2_output['message']
+    exitflag2=LP2_output['status']
 
     if exitflag2>1:
         print("LP2 solution was not found.")
         print(LP1_output['message'])
+        return
 
-    print(xLP)
-    print(sol2)
+    #print(xLP)
+    #print(sol2)
     for i in range(szLPx):
         sol2[i] = sol2[i] / xLP[i];
 
@@ -283,9 +284,11 @@ def generate_sample(max_value,n):
     sample = np.random.randint(1, max_value, size=(n, 1));
     return sample
 
+#change here the max_value
+max_value=20
 
-max_value=100000
-count=10000
+#change here the size of sample.
+count=20
 
 sample=generate_sample(max_value,count)
 
@@ -295,27 +298,38 @@ hist = make_finger(sample);
 hist = np.reshape(hist, (hist.shape[0], 1))
 #print(hist.shape)
 f=hist;
-#print(f)
 
-x,hist=unseen_largescale(f, 500);
+#sample inputs
+#f=[[4],[3],[2],[1]]
+#f=[[5], [4], [1], [1]]
+#f=[[8], [4], [0], [1]]
+#f=[[9], [2], [1], [1]]
+f=[[7], [3], [1], [1]]
+#f=[[87],  [5],  [1]]
+#f=[[91],  [3],  [1]]
+
+if unseen_largescale(f, 500)!= None:
+    x,hist=unseen_largescale(f, 500);
 #estimating the histogram of distribution from which it is drawn
-print(x,hist)
-print("The estimate of histogram of distribution from which sample is drawn is :",hist)
+    print(x,hist)
+    print("The estimate of histogram of distribution from which sample is drawn is :",hist)
 
 
-true_entropy=np.log(max_value);
+    true_entropy=np.log(max_value);
 
-#empiricalEntropy = -f'*(((1:max(size(f)))/k).*log(((1:max(size(f)))/k)))'
+    #empiricalEntropy = -f'*(((1:max(size(f)))/k).*log(((1:max(size(f)))/k)))'
 
-temp=np.arange(1,len(f)+1)
-temp=np.divide(temp,count*1.0);
-empirical_entropy=np.matmul(np.transpose(f),np.multiply(temp,np.log(temp)))
-print("Empirical entropy is:",empirical_entropy)
+    temp=np.arange(1,len(f)+1)
+    temp=np.divide(temp,count*1.0);
+    empirical_entropy=-np.matmul(np.transpose(f),np.multiply(temp,np.log(temp)))
+    print("Empirical entropy is:",empirical_entropy)
 
-#output entropy of the recovered histogram, [h,x]
-estimated_entropy=-np.matmul(hist,np.multiply(x,np.log(x)))
-print("Estimated entropy is:",estimated_entropy)
+    #output entropy of the recovered histogram, [h,x]
+    estimated_entropy=-np.matmul(hist,np.multiply(x,np.log(x)))
+    print("Estimated entropy is:",estimated_entropy)
 
-# #output entropy using entropy_estC.m (should be almost the same as above):
-estimatedEntropy2 = entropy_est.entropy_estimate(f)
-print("The estimated entropy is:",estimatedEntropy2)
+    # #output entropy using entropy_estC.m (should be almost the same as above):
+    estimatedEntropy2 = entropy_est.entropy_estimate(f)
+    print("The estimated entropy is:",estimatedEntropy2)
+else:
+    print("The empirical estimation failed because of linear programming solution failure.Try with different sample.")
